@@ -1,4 +1,4 @@
-package com.example.a80021611.annualmeetingapp.netty4android.util;
+package com.example.a80021611.annualmeetingapp.nettylib.util;
 
 
 import android.content.Context;
@@ -21,6 +21,4 @@ public class NetworkUtil {
         }
         return netWorkInfo.isAvailable();
     }
-
-
 }

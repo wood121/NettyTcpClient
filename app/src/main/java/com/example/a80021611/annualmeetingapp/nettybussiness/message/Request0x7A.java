@@ -1,12 +1,14 @@
-package com.example.a80021611.annualmeetingapp.netty4android.message;
+package com.example.a80021611.annualmeetingapp.nettybussiness.message;
 
-import com.example.a80021611.annualmeetingapp.netty4android.util.ByteUtil;
-import com.example.a80021611.annualmeetingapp.netty4android.util.TCPConfig;
+import com.example.a80021611.annualmeetingapp.nettylib.message.Request;
+import com.example.a80021611.annualmeetingapp.nettylib.message.ResponseListener;
+import com.example.a80021611.annualmeetingapp.nettylib.util.ByteUtil;
+import com.example.a80021611.annualmeetingapp.nettybussiness.TCPConfig;
 
 import java.io.ByteArrayOutputStream;
 import java.io.DataOutputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.Arrays;
 
 import io.netty.util.internal.StringUtil;
@@ -16,7 +18,7 @@ import io.netty.util.internal.StringUtil;
  * 0x7A	    2	    2	    4	        1	    2	        2	        2	        1	      2	       N	  2
  * eg:心跳包内容 0x7A	0x0010	0x1000	0x0001(需递增)	0x00	0x0000	0x0010	0x8000	0x00	0x1001	0x00	0xDB87
  */
-public class Request {
+public class Request0x7A implements Serializable, Request {
     private int protocal_header = TCPConfig.PROTOCAL_HEADER;
     private int length;
     private int protocal_version = TCPConfig.PROTOCAL_VERSION;
@@ -30,50 +32,44 @@ public class Request {
     private byte[] commandContent;
     private int verifyCode;
     private int reponseVerifyCode;  //回来的数值进行判断
-    private boolean isResend;
-    private ResponseListener callback;
+    private boolean isResend;   //是否是重发的消息
+    private ResponseListener callback;  //监听接收的消息
+
+    public Request0x7A getHeartBeatRequest(int serialNumber) {
+        setLength(TCPConfig.HEARTBEAT_LENGTH);
+        setProtocal_version(TCPConfig.HEARTBEAT_PROTOCAL_VERSION);
+        setSerialNumber(serialNumber);
+        setIsNeedResponse(0);
+        setSendId(TCPConfig.SEND_ID_6);
+//        setSendId(TCPConfig.SEND_ID_8);
+        setReceiveId(TCPConfig.HEARTBEAT_RECEIVEID);
+        setCommandPriority(TCPConfig.HEARTBEAT_COMMAND_PRIORITY);
+        setCommandType(TCPConfig.HEARTBEAT_COMMAND_TYPE);
+        setCommandContent(TCPConfig.HEARTBEAT_COMMAND_CONTENT_BYTE);
+        setVerifyCode(TCPConfig.HEARTBEAT_VERIFY_CODE);
+        return this;
+    }
 
     public String getSendMsgHexString() throws IOException {
         return StringUtil.toHexString(getSendMsgByte());
     }
 
-    public String getSendMsgHexString(boolean heartbeat) throws IOException {
-        return StringUtil.toHexString(getSendMsgByte(heartbeat));
-    }
-
+    @Override
     public byte[] getSendMsgByte() throws IOException {
-        return getSendMsgByte(false);
-    }
-
-    public byte[] getSendMsgByte(boolean heartbeat) throws IOException {
-        ByteArrayOutputStream byteArrayOutputStream = null;
-        if (heartbeat) {
-            byteArrayOutputStream = new ByteArrayOutputStream(22);
-        } else {
-            byteArrayOutputStream = new ByteArrayOutputStream(length + 5);
-        }
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream(length + 5);
         DataOutputStream dataOutputStream = new DataOutputStream(byteArrayOutputStream);
         dataOutputStream.writeByte(protocal_header);
-        if (heartbeat) setLength(TCPConfig.HEARTBEAT_LENGTH);
         dataOutputStream.writeShort(length);
-        if (heartbeat) setProtocal_version(TCPConfig.HEARTBEAT_PROTOCAL_VERSION);
         dataOutputStream.writeShort(protocal_version);
         dataOutputStream.writeInt(serialNumber);
-        if (heartbeat) setIsNeedResponse(0);
         dataOutputStream.writeByte(isNeedResponse);
         dataOutputStream.writeShort(groupId);
-//        if (heartbeat) setSendId(TCPConfig.SEND_ID_8);
-        if (heartbeat) setSendId(TCPConfig.SEND_ID_6);
         dataOutputStream.writeShort(sendId);
-        if (heartbeat) setReceiveId(TCPConfig.HEARTBEAT_RECEIVEID);
         dataOutputStream.writeShort(receiveId);
-        if (heartbeat) setCommandPriority(TCPConfig.HEARTBEAT_COMMAND_PRIORITY);
         dataOutputStream.writeByte(commandPriority);
-        if (heartbeat) setCommandType(TCPConfig.HEARTBEAT_COMMAND_TYPE);
         dataOutputStream.writeShort(commandType);
-        if (heartbeat) setCommandContent(TCPConfig.HEARTBEAT_COMMAND_CONTENT_BYTE);
         dataOutputStream.write(commandContent);
-        if (heartbeat) {
+        if (commandType == TCPConfig.HEARTBEAT_COMMAND_TYPE) {
             setVerifyCode(TCPConfig.HEARTBEAT_VERIFY_CODE);
         } else {
             //生成校验码：新消息、回复的0x0000需要计算，重发的计算出来的不变
@@ -189,15 +185,6 @@ public class Request {
         isResend = resend;
     }
 
-    public ResponseListener getCallback() {
-        return callback;
-    }
-
-    public Request setCallback(ResponseListener callback) {
-        this.callback = callback;
-        return this;
-    }
-
     public int getReponseVerifyCode() {
         return reponseVerifyCode;
     }
@@ -224,5 +211,16 @@ public class Request {
                 ", reponseVerifyCode=" + reponseVerifyCode +
                 ", isResend=" + isResend +
                 '}';
+    }
+
+    @Override
+    public Request0x7A setCallback(ResponseListener callback) {
+        this.callback = callback;
+        return this;
+    }
+
+    @Override
+    public ResponseListener getCallback() {
+        return callback;
     }
 }

@@ -1,4 +1,4 @@
-package com.example.a80021611.annualmeetingapp.netty4android.util;
+package com.example.a80021611.annualmeetingapp.nettybussiness;
 
 /**
  * <p>描述：(the constant of the tcp params)</p>
@@ -22,6 +22,8 @@ public interface TCPConfig {
     long RECONNECT_INTERVAL_TIME = 2 * 1000;
     //心跳时间间隔(单位:s)
     int HEARTBEAT_TIME = 100;
+
+    int RECONNECTION_TIME = 3;
 
     /**
      * the field of normal message packet and heartbeat packet
@@ -65,5 +67,4 @@ public interface TCPConfig {
     byte[] HEARTBEAT_COMMAND_CONTENT_BYTE = {0x00};
 
     int HEARTBEAT_VERIFY_CODE = 0xDB87;
-
 }

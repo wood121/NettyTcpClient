@@ -5,7 +5,7 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 
-import com.example.a80021611.annualmeetingapp.netty4android.NettyFActivity;
+import com.example.a80021611.annualmeetingapp.nettybussiness.NettyFActivity;
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 

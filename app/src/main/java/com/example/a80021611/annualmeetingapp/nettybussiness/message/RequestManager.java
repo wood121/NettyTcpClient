@@ -1,14 +1,13 @@
-package com.example.a80021611.annualmeetingapp.netty4android.message;
+package com.example.a80021611.annualmeetingapp.nettybussiness.message;
 
 
 import android.annotation.SuppressLint;
 import android.os.Handler;
 import android.os.Message;
+import android.util.Log;
 
-import com.example.a80021611.annualmeetingapp.netty4android.connection.NettyClient;
-import com.example.a80021611.annualmeetingapp.netty4android.connection.NettyListener;
-import com.example.a80021611.annualmeetingapp.netty4android.util.LogUtils;
-import com.example.a80021611.annualmeetingapp.netty4android.util.TCPConfig;
+import com.example.a80021611.annualmeetingapp.nettybussiness.NettyBussinessManager;
+import com.example.a80021611.annualmeetingapp.nettylib.connection.NettyListener;
 
 import java.io.IOException;
 import java.util.HashMap;
@@ -23,7 +22,7 @@ import java.util.Map;
 public class RequestManager {
     private static final String TAG = "RequestManager";
     private static RequestManager sRequestManager = new RequestManager();
-    private Map<Integer, Request> mDataSendMap = new HashMap();
+    private Map<Integer, Request0x7A> mDataSendMap = new HashMap();
 
     @SuppressLint("HandlerLeak")
     private Handler mHandler = new Handler() {
@@ -31,13 +30,13 @@ public class RequestManager {
             super.handleMessage(msg);
             if (msg != null) {
                 int serialNumber = msg.arg1;
-                Request request = mDataSendMap.get(serialNumber);
+                Request0x7A request0x7A = mDataSendMap.get(serialNumber);
                 if (mDataSendMap.size() > 0 && mDataSendMap.get(serialNumber) != null) {
-                    request.getCallback().onFail(NettyListener.STATUS_CONNECT_CLOSED);
+                    request0x7A.getCallback().onFail(NettyListener.STATUS_CONNECT_CLOSED);
                     mDataSendMap.remove(serialNumber);
-                    if (!request.isResend()) {  //重发的消息只发送一次，不再重复
-                        request.setResend(true);
-                        resend(request);
+                    if (!request0x7A.isResend()) {  //重发的消息只发送一次，不再重复
+                        request0x7A.setResend(true);
+                        resend(request0x7A);
                     }
                 }
             }
@@ -47,15 +46,14 @@ public class RequestManager {
     /**
      * 请求重发
      *
-     * @param request
+     * @param request0x7A
      */
-    public void resend(Request request) {
+    public void resend(Request0x7A request0x7A) {
         try {
-            NettyClient.getInstance().sendMessage(request);
-            LogUtils.logError(TAG, "resend === resend");
+            NettyBussinessManager.getInstance().sendMessage(request0x7A);
+            Log.e(TAG, "resend === resend");
         } catch (IOException e) {
-            e.printStackTrace();
-            LogUtils.logError("resend", "resend error");
+            Log.e("resend", "resend error:" + e.toString());
         }
     }
 
@@ -69,27 +67,27 @@ public class RequestManager {
     /**
      * 缓存需要重发的请求, 5s的超时时间
      *
-     * @param request
+     * @param request0x7A
      */
-    public void add(Request request) {
-        if (request != null) {
-            mDataSendMap.put(request.getSerialNumber(), request);
+    public void add(Request0x7A request0x7A) {
+        if (request0x7A != null) {
+            mDataSendMap.put(request0x7A.getSerialNumber(), request0x7A);
 
             Message handlerMsg = Message.obtain();
-            handlerMsg.arg1 = request.getSerialNumber();
+            handlerMsg.arg1 = request0x7A.getSerialNumber();
             this.mHandler.sendMessageDelayed(handlerMsg, 5 * 1000);
         }
     }
 
-    public Request getRequest(int serialNumber) {
+    public Request0x7A getRequest(int serialNumber) {
         return mDataSendMap.get(serialNumber);
     }
 
     public void removeRequestBySerialNumber(int serialNumber) {
         mHandler.removeMessages(serialNumber);
-        Iterator<Map.Entry<Integer, Request>> it = mDataSendMap.entrySet().iterator();
+        Iterator<Map.Entry<Integer, Request0x7A>> it = mDataSendMap.entrySet().iterator();
         while (it.hasNext()) {
-            Map.Entry<Integer, Request> entry = it.next();
+            Map.Entry<Integer, Request0x7A> entry = it.next();
             if (serialNumber == entry.getKey()) {
                 it.remove();
                 return;

@@ -1,4 +1,4 @@
-package com.example.a80021611.annualmeetingapp.netty4android.connection;
+package com.example.a80021611.annualmeetingapp.nettylib.connection;
 
 import java.io.IOException;
 

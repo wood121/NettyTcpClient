@@ -35,10 +35,10 @@
         <activity android:name=".anonymous_card.activities.SendNewCardActivity" />
         <activity android:name=".anonymous_card.activities.CardDetailActivity" />
         <activity android:name=".nettycai_client.NettyClientActivity" />
-        <activity android:name=".netty4android.NettyFActivity" />
+        <activity android:name=".nettybussiness.NettyFActivity" />
 
         <service
-            android:name=".netty4android.service.NettyService"
+            android:name=".nettylib.connection.NettyService"
             android:enabled="true"
             android:exported="true" />
     </application>
