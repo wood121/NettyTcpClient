@@ -10,10 +10,10 @@ public interface DefaultConfig {
     //重连次数
     int RECONNECTION_TIME = 3;
     //重连超时时间
-    long RECONNECT_INTERVAL_TIME = 2 * 1000;
+    long RECONNECT_INTERVAL_TIME = 30 * 1000;
     //连接超时时间
     int CONNECTION_TIMEOUT = 5 * 1000;
 
-    //心跳时间间隔(单位:s)
-    int HEARTBEAT_TIME = 60;
+    //心跳时间间隔(单位:) ms,
+    int HEARTBEAT_TIME = 5;
 }

@@ -3,6 +3,7 @@ package com.example.a80021611.annualmeetingapp.nettylib.message;
 import java.util.List;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageDecoder;
 
@@ -11,6 +12,7 @@ import io.netty.handler.codec.MessageToMessageDecoder;
  * 作者： wood121<br>
  * 日期： 2018/11/14 11:00<br>
  */
+@ChannelHandler.Sharable
 public abstract class RequestDecoder extends MessageToMessageDecoder<ByteBuf> {
 
     @Override

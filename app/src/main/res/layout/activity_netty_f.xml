@@ -19,8 +19,18 @@
         android:text="not_need_response" />
 
     <TextView
-        android:id="@+id/resultTextView"
+        android:id="@+id/tv_send"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="TextView" />
+        android:gravity="center"
+        android:padding="5dp"
+        android:text="已发送的条数:" />
+    
+    <TextView
+        android:id="@+id/tv_receive"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:padding="5dp"
+        android:text="收发回来的消息条数" />
 </LinearLayout>

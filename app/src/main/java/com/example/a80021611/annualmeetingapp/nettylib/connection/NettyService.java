@@ -91,6 +91,7 @@ public class NettyService extends Service {
                     }
                 });
                 clientThread.start();
+                Log.e(TAG, "clientThread" + clientThread.getName());
             }
         }
     }

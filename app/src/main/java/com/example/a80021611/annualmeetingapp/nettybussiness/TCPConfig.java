@@ -10,7 +10,7 @@ public interface TCPConfig {
     /**
      * the ip and port to create TCP connection
      */
-    String TCP_HOST = "10.8.4.58";
+    String TCP_HOST = "10.8.4.67";
     int TCP_PORT = 2089;    //our server is 2089
 
     /**
@@ -24,6 +24,8 @@ public interface TCPConfig {
     int HEARTBEAT_TIME = 100;
 
     int RECONNECTION_TIME = 3;
+
+
 
     /**
      * the field of normal message packet and heartbeat packet

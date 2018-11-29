@@ -37,16 +37,3 @@ public class Request0x7AEncoder extends RequestEncoder {
         }
     }
 }
-
-
-//        byteBuf.writeByte(request0x7A.getProtocal_header());
-//        byteBuf.writeShort(request0x7A.getLength());
-//        byteBuf.writeShort(request0x7A.getProtocal_version());
-//        byteBuf.writeInt(request0x7A.getSerialNumber());
-//        byteBuf.writeByte(request0x7A.getIsNeedResponse());
-//        byteBuf.writeShort(request0x7A.getGroupId());
-//        byteBuf.writeShort(request0x7A.getSendId());
-//        byteBuf.writeShort(request0x7A.getReceiveId());
-//        byteBuf.writeByte(request0x7A.getCommandPriority());
-//        byteBuf.writeShort(request0x7A.getCommandType());
-//        byteBuf.writeBytes(request0x7A.getCommandContent());

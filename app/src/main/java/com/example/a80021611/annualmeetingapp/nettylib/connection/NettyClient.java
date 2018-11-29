@@ -8,7 +8,6 @@ import android.os.IBinder;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.example.a80021611.annualmeetingapp.nettybussiness.TCPConfig;
 import com.example.a80021611.annualmeetingapp.nettylib.DefaultConfig;
 import com.example.a80021611.annualmeetingapp.nettylib.message.Request;
 import com.example.a80021611.annualmeetingapp.nettylib.message.RequestDecoder;
@@ -30,7 +29,6 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
-import io.netty.handler.codec.ByteToMessageDecoder;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.timeout.IdleStateHandler;
 
@@ -46,12 +44,10 @@ public class NettyClient {
     //连接的ip,端口
     private String mHost;
     private int mPort;
-    //心跳包管理类
-    private IdleStateHandler mIdleStateHandler;
     //数据编解码类
     private RequestEncoder mRequestEncoder;
     private RequestDecoder mRequestDecoder;
-    private LengthFieldBasedFrameDecoder mLengthFieldBasedFrameDecoder;
+    private LenthDecoderParamsBean mDecoderParamsBean;
     //消息回调分发处理
     private NettyClientHandler mClientHandler;
     //重连超时时间
@@ -82,10 +78,9 @@ public class NettyClient {
         this.mHost = builder.host;
         this.mPort = builder.port;
         this.mContext = builder.context;
-        this.mIdleStateHandler = builder.idleStateHandler;
         this.mRequestEncoder = builder.encoder;
-        this.mLengthFieldBasedFrameDecoder = builder.decoder;
         this.mRequestDecoder = builder.requestDecoder;
+        this.mDecoderParamsBean = builder.decoderParamsBean;
         this.mReconnectNum = builder.reconnectNum;
         this.mReconnectIntervalTime = builder.reconnectIntervalTime;
         this.mClientHandler = builder.clientHandler;
@@ -164,9 +159,13 @@ public class NettyClient {
                         @Override
                         protected void initChannel(SocketChannel socketChannel) throws Exception {
                             ChannelPipeline pipeline = socketChannel.pipeline();
-                            pipeline.addLast("ping", mIdleStateHandler);
+                            pipeline.addLast("ping", new IdleStateHandler(0, DefaultConfig.HEARTBEAT_TIME, 0, TimeUnit.MILLISECONDS));
                             pipeline.addLast(mRequestEncoder);
-                            pipeline.addLast(mLengthFieldBasedFrameDecoder);
+                            pipeline.addLast(new LengthFieldBasedFrameDecoder(mDecoderParamsBean.getMaxFrameLength()
+                                    , mDecoderParamsBean.getLengthFieldOffset()
+                                    , mDecoderParamsBean.getLengthFieldLength()
+                                    , mDecoderParamsBean.getLengthAdjustment()
+                                    , mDecoderParamsBean.getInitialBytesToStrip()));
                             pipeline.addLast(mRequestDecoder);
                             pipeline.addLast(mClientHandler);
                         }
@@ -221,11 +220,13 @@ public class NettyClient {
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
+
                 disconnect();
-                connect();
                 isReconnecting = true;
                 listener.onServiceStatusConnectChanged(NettyListener.STATUS_CONNECT_RECONNECT);
                 mReconnectNum--;
+                Log.e(TAG, "mReconnectNum:" + mReconnectNum);
+                connect();
             } else {
                 mReconnectNum = DefaultConfig.RECONNECTION_TIME;
                 disconnect();
@@ -254,9 +255,9 @@ public class NettyClient {
             mContext.unbindService(mServiceConnection);
         }
         if (isConnected) {
+            disconnect();
             setDoReconnect(false);
             setReconnectNum(0);
-            disconnect();
             if (channel != null && channel.isOpen()) {
                 channel.close();
             }
@@ -304,9 +305,8 @@ public class NettyClient {
 
         private String host;
         private int port;
-        private IdleStateHandler idleStateHandler;
         private RequestEncoder encoder;
-        private LengthFieldBasedFrameDecoder decoder;
+        private LenthDecoderParamsBean decoderParamsBean;
         private RequestDecoder requestDecoder;
         private int reconnectNum;   //重连次数
         private long reconnectIntervalTime; //重连超时时间
@@ -316,16 +316,13 @@ public class NettyClient {
         public Builder() {
             this.reconnectNum = DefaultConfig.RECONNECTION_TIME;
             this.reconnectIntervalTime = DefaultConfig.RECONNECT_INTERVAL_TIME;
-            this.idleStateHandler = new IdleStateHandler(0, DefaultConfig.HEARTBEAT_TIME, 0, TimeUnit.SECONDS);
             this.clientHandler = new NettyClientHandler();
         }
 
         public Builder(NettyClient nettyClient) {
             this.host = nettyClient.mHost;
             this.port = nettyClient.mPort;
-            this.idleStateHandler = nettyClient.mIdleStateHandler;
             this.encoder = nettyClient.mRequestEncoder;
-            this.decoder = nettyClient.mLengthFieldBasedFrameDecoder;
             this.reconnectNum = nettyClient.mReconnectNum;
             this.reconnectIntervalTime = nettyClient.mReconnectIntervalTime;
             this.context = nettyClient.mContext;
@@ -342,18 +339,13 @@ public class NettyClient {
             return this;
         }
 
-        public Builder idleStateHandler(IdleStateHandler idleStateHandler) {
-            this.idleStateHandler = idleStateHandler;
-            return this;
-        }
-
         public Builder encoder(RequestEncoder encoder) {
             this.encoder = encoder;
             return this;
         }
 
-        public Builder decoder(LengthFieldBasedFrameDecoder decoder) {
-            this.decoder = decoder;
+        public Builder decoder(LenthDecoderParamsBean decoderParamsBean) {
+            this.decoderParamsBean = decoderParamsBean;
             return this;
         }
 
@@ -390,7 +382,7 @@ public class NettyClient {
                 throw new IllegalArgumentException("the encoder can not be null,please call encoder(RequestEncoder encoder) to solve it");
             }
 
-            if (decoder == null || requestDecoder == null) {
+            if (decoderParamsBean == null || requestDecoder == null) {
                 throw new IllegalArgumentException("the decoder or requestDecoder can not be null," +
                         "please call decoder(ByteToMessageDecoder decoder) or decoder(ByteToMessageDecoder decoder) to solve it");
             }

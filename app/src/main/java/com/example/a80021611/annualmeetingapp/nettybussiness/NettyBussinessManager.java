@@ -8,6 +8,7 @@ import com.example.a80021611.annualmeetingapp.nettybussiness.message.Request0x7A
 import com.example.a80021611.annualmeetingapp.nettybussiness.message.Request0x7AEncoder;
 import com.example.a80021611.annualmeetingapp.nettybussiness.message.RequestManager;
 import com.example.a80021611.annualmeetingapp.nettylib.connection.FutureListener;
+import com.example.a80021611.annualmeetingapp.nettylib.connection.LenthDecoderParamsBean;
 import com.example.a80021611.annualmeetingapp.nettylib.connection.NettyClient;
 import com.example.a80021611.annualmeetingapp.nettylib.connection.NettyListener;
 import com.example.a80021611.annualmeetingapp.nettylib.message.Request;
@@ -16,8 +17,6 @@ import com.example.a80021611.annualmeetingapp.nettylib.util.ByteUtil;
 import java.io.IOException;
 
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
-import io.netty.handler.codec.LineBasedFrameDecoder;
 
 /**
  * <p>描述：
@@ -32,13 +31,15 @@ import io.netty.handler.codec.LineBasedFrameDecoder;
  * 版本： v2.0<br>
  */
 public class NettyBussinessManager implements NettyListener {
-    public static final String TAG = "NettyClientManager";
+    public static final String TAG = "NettyBussinessManager";
     private static NettyBussinessManager mNettyClientManager;
     private NettyClient mNettyClient;
     private int heartBeatCount = 1;
     private int serialNumber = 1;
+    private HBListener mHbListener;
 
     private NettyBussinessManager() {
+
     }
 
     public static NettyBussinessManager getInstance() {
@@ -57,7 +58,7 @@ public class NettyBussinessManager implements NettyListener {
             mNettyClient = new NettyClient.Builder()
                     .initcontext(context)
                     .hostAndPort(TCPConfig.TCP_HOST, TCPConfig.TCP_PORT)
-                    .decoder(new LengthFieldBasedFrameDecoder(33, 1, 2, 2, 0))
+                    .decoder(new LenthDecoderParamsBean(33, 1, 2, 2, 0))
                     .requestDecoder(new Request0x7ADecoder())
                     .encoder(new Request0x7AEncoder())
                     .build()
@@ -73,8 +74,11 @@ public class NettyBussinessManager implements NettyListener {
         }
     }
 
+    private int receiveNum = 0;
+
     @Override
     public void onMessageResponse(Request request) throws IOException {
+//        Log.e(TAG, "当前线程：" + Thread.currentThread().getName());
         Request0x7A responseRequest0x7A = (Request0x7A) request;
         if (TCPConfig.HEARTBEAT_COMMAND_TYPE != responseRequest0x7A.getCommandType()) {
             Log.e(TAG, "channelRead=1111=" + responseRequest0x7A.getSendMsgHexString());
@@ -94,6 +98,8 @@ public class NettyBussinessManager implements NettyListener {
             }
         } else {
             Log.e(TAG, "channelRead=2222=" + responseRequest0x7A.getSendMsgHexString());
+            receiveNum++;
+            mHbListener.msgReceive(receiveNum);
         }
     }
 
@@ -148,13 +154,29 @@ public class NettyBussinessManager implements NettyListener {
         }
     }
 
+    private int msgSend = 0;
+
     @Override
     public void sendHeartBeatMessage(ChannelHandlerContext ctx) {
         try {
+            if (heartBeatCount > 5000) {
+                return;
+            }
             if (heartBeatCount == Integer.MAX_VALUE) heartBeatCount = 1;
             Request0x7A request0x7A = new Request0x7A().getHeartBeatRequest(heartBeatCount);
             heartBeatCount++;
-            sendMessage(request0x7A);
+            sendMessage(request0x7A, new FutureListener() {
+                @Override
+                public void success() throws IOException {
+                    msgSend++;
+                    mHbListener.msgSend(msgSend);
+                }
+
+                @Override
+                public void error() {
+
+                }
+            });
         } catch (Exception e) {
 
         }
@@ -195,5 +217,9 @@ public class NettyBussinessManager implements NettyListener {
         }
 
         mNettyClient.sendMessage(request0x7A, futureListener);
+    }
+
+    public void setHBListener(HBListener hbListener) {
+        this.mHbListener = hbListener;
     }
 }

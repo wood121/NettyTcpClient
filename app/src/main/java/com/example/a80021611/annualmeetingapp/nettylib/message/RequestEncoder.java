@@ -1,6 +1,7 @@
 package com.example.a80021611.annualmeetingapp.nettylib.message;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToByteEncoder;
 
@@ -10,6 +11,8 @@ import io.netty.handler.codec.MessageToByteEncoder;
  * 日期： 2018/11/14 10:46<br>
  * 版本： v2.0<br>
  */
+
+@ChannelHandler.Sharable
 public abstract class RequestEncoder extends MessageToByteEncoder<Request> {
 
     @Override
